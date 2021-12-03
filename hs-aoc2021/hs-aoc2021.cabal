@@ -16,11 +16,15 @@ tested-with:         GHC == 9.0.1
 common common-options
   build-depends:       base >= 4.13.0.0
                      , relude
+                     , text
   
-  mixins:              base hiding (Prelude)
-                     , relude (Relude as Prelude)
-                     , relude
-   
+  -- mixins:              base hiding (Prelude)
+  --                    , relude (Relude as Prelude)
+  --                    , relude
+
+  default-extensions:  OverloadedStrings 
+                       NoImplicitPrelude
+
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities
@@ -38,12 +42,16 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     HsAoc2021
+  build-depends:       safe
 
 executable hs-aoc2021
   import:              common-options
   hs-source-dirs:      app
   main-is:             Main.hs
-  build-depends:       hs-aoc2021
+  
+  build-depends:       hs-aoc2021,
+                       megaparsec
+                      
   ghc-options:         -threaded
                        -rtsopts
                        -with-rtsopts=-N
