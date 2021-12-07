@@ -1,15 +1,28 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Main (main) where
 
-import Data.Text.Read (decimal)
+import qualified Control.Monad as TM
+import Data.Char (isLetter)
 import qualified Data.Set as Set (fromList)
-import qualified HsAoc2021  as Aoc (day1Part1, day1Part2, day2Part1, day2Part2, Command(..), Direction (..) )
+import Data.Text.Read (decimal)
+import qualified HsAoc2021 as Aoc
+  ( Command (..),
+    DiagnosticReport,
+    Direction (..),
+    PowerConsumption,
+    day1Part1,
+    day1Part2,
+    day2Part1,
+    day2Part2,
+    day3Part1,
+    mkDiagnosticReport, day3Part2,
+  )
 import Relude
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC
 import qualified Text.Megaparsec.Char.Lexer as L
-import Data.Char (isLetter)
 
 main :: (MonadIO m) => m ()
 main = do
@@ -19,21 +32,30 @@ main = do
   runDay2 1 Aoc.day2Part1
   runDay2 2 Aoc.day2Part2
 
+  runDay3 1 Aoc.day3Part1
+  runDay3 2 Aoc.day3Part2
   where
+    runDay3 :: MonadIO m => Int -> (Aoc.DiagnosticReport -> Aoc.PowerConsumption) -> m ()
+    runDay3 part runDay3Func = do
+      input <- readInputOfDay3 "../data/day3/part1/input.txt"
+      case input of
+        Left _ -> print $ "Failure to parse input of Day 3 / Part " <> show part
+        Right report -> printResult 3 part $ runDay3Func report
+
     runDay2 :: MonadIO m => Int -> ([Aoc.Command] -> Int) -> m ()
     runDay2 part runDay2Func = do
       input <- readInputOfDay2 "../data/day2/part1/input.txt"
       case input of
-          Left _ -> print $ "Failure to parse input of Day 2 / Part " <> show part
-          Right cmds -> printResult 2 part $ runDay2Func cmds
+        Left _ -> print $ "Failure to parse input of Day 2 / Part " <> show part
+        Right cmds -> printResult 2 part $ runDay2Func cmds
 
-    runDay1 :: MonadIO m => Int -> ([Int] -> Int) -> m () 
+    runDay1 :: MonadIO m => Int -> ([Int] -> Int) -> m ()
     runDay1 part f = do
       input <- readInputOfDay1 "../data/day1/part1/input.txt"
       printResult 1 part $ f input
 
 -- Dumb function to print result
-printResult :: MonadIO m => Int -> Int -> Int -> m()
+printResult :: MonadIO m => Int -> Int -> Int -> m ()
 printResult day part result =
   print $ "Day " <> show day <> " / Part " <> show part <> ": " <> show result
 
@@ -51,30 +73,48 @@ readInputOfDay2 path = do
   content <- readFile . toString $ path
   TM.runParserT parseCommands "input" . toText $ content
 
-
 type Day2InputParserT = TM.ParsecT Void Text
 
 parseCommands :: Day2InputParserT m [Aoc.Command]
 parseCommands = do
-  TM.sepEndBy parseCommand TMC.space
-
-parseCommand :: Day2InputParserT m Aoc.Command
-parseCommand = do
-  direction <- parseDirection
-  speed <- L.decimal
-  return $ Aoc.Command { Aoc.speed = speed , Aoc.direction = direction }
-
-parseDirection :: TM.ParsecT Void Text m Aoc.Direction
-parseDirection = do
-  rawDirection <- TM.many (TM.satisfy isLetter :: Day2InputParserT m Char)
-  _ <- TMC.space
-  toDirection . toText $ rawDirection
+  TM.manyTill parseCommand TM.eof
   where
-    toDirection x =
-      case x of
-        "forward" -> return Aoc.Forward
-        "down" -> return Aoc.Down
-        "up" -> return Aoc.Up
-        _ -> TM.failure Nothing (Set.fromList [])
+    parseCommand :: Day2InputParserT m Aoc.Command
+    parseCommand = do
+      direction <- parseDirection
+      speed <- L.decimal
+      _ <- TMC.newline
+      return $ Aoc.Command {Aoc.speed = speed, Aoc.direction = direction}
 
+    parseDirection :: Day2InputParserT m Aoc.Direction
+    parseDirection = do
+      rawDirection <-
+        TM.manyTill (TM.satisfy isLetter :: Day2InputParserT m Char) TMC.hspace1
+          <|> TM.fail "Failure to parse day 2 input !"
+      toDirection . toText $ rawDirection
+      where
+        toDirection x =
+          case x of
+            "forward" -> return Aoc.Forward
+            "down" -> return Aoc.Down
+            "up" -> return Aoc.Up
+            _ -> TM.failure Nothing (Set.fromList [])
 
+-- Getting input for day 3
+readInputOfDay3 :: MonadIO m => Text -> m (Either (TM.ParseErrorBundle Text Void) Aoc.DiagnosticReport)
+readInputOfDay3 path = do
+  content <- readFile . toString $ path
+  TM.runParserT parseDiagnosticReport "input" . toText $ content
+
+type Day3InputParserT = TM.ParsecT Void Text
+
+parseDiagnosticReport :: Day3InputParserT m Aoc.DiagnosticReport
+parseDiagnosticReport = do
+  rawLines <- parseLines <|> TM.fail "We cannot parse Day 3 input !"
+  case Aoc.mkDiagnosticReport . toBits $ rawLines of
+    Just report -> return report
+    Nothing -> TM.failure Nothing (Set.fromList [])
+  where
+    parseLine = TM.manyTill (TM.satisfy (\c -> c == '1' || c == '0') :: Day3InputParserT m Char) TMC.eol
+    parseLines = TM.manyTill parseLine TM.eof
+    toBits = (fmap . fmap) (== '1')

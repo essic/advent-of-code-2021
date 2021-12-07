@@ -42,7 +42,9 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     HsAoc2021
-  build-depends:       safe
+  build-depends:       safe,
+                       matrix,
+                       vector
 
 executable hs-aoc2021
   import:              common-options
