@@ -4,33 +4,61 @@ import qualified Control.Monad as TM
 import Data.Char (isLetter)
 import qualified Data.Set as Set (fromList)
 import Data.Text.Read (decimal)
-import qualified HsAoc2021 as Aoc
+import HsAoc2021
+    ( day1Part1,
+      day1Part2,
+      day2Part1,
+      day2Part2,
+      day3Part1,
+      day3Part2 )
+import HsAoc2021.Types as Aoc
   ( Command (..),
     DiagnosticReport,
     Direction (..),
     PowerConsumption,
-    day1Part1,
-    day1Part2,
-    day2Part1,
-    day2Part2,
-    day3Part1,
-    mkDiagnosticReport, day3Part2,
+    mkDiagnosticReport,
   )
 import Relude
+    ( fst,
+      ($),
+      Eq((==)),
+      Monad(return),
+      Functor(fmap),
+      Applicative(pure),
+      Semigroup((<>)),
+      Monoid(mconcat),
+      Char,
+      Int,
+      Maybe(Nothing, Just),
+      Either(..),
+      (.),
+      (||),
+      Alternative((<|>)),
+      rights,
+      readFileText,
+      readFile,
+      putTextLn,
+      show,
+      words,
+      MonadIO,
+      Void,
+      ToString(toString),
+      ToText(toText),
+      Text )
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC
 import qualified Text.Megaparsec.Char.Lexer as L
 
 main :: (MonadIO m) => m ()
 main = do
-  runDay1 1 Aoc.day1Part1
-  runDay1 2 Aoc.day1Part2
+  runDay1 1 day1Part1
+  runDay1 2 day1Part2
 
-  runDay2 1 Aoc.day2Part1
-  runDay2 2 Aoc.day2Part2
+  runDay2 1 day2Part1
+  runDay2 2 day2Part2
 
-  runDay3 1 Aoc.day3Part1
-  runDay3 2 Aoc.day3Part2
+  runDay3 1 day3Part1
+  runDay3 2 day3Part2
   where
     runDay3 :: MonadIO m => Int -> (Aoc.DiagnosticReport -> Aoc.PowerConsumption) -> m ()
     runDay3 part runDay3Func = do
@@ -54,7 +82,7 @@ main = do
 -- Dumb function to print result
 printResult :: MonadIO m => Int -> Int -> Int -> m ()
 printResult day part result =
-  putTextLn . mconcat $ ["Day ",show day," / Part ",show part,": ",show result]
+  putTextLn . mconcat $ ["Day ", show day, " / Part ", show part, ": ", show result]
 
 -- Getting input for day 1
 readInputOfDay1 :: MonadIO m => Text -> m [Int]
@@ -78,10 +106,10 @@ parseCommands = do
   where
     parseCommand :: Day2InputParserT m Aoc.Command
     parseCommand = do
-      direction <- parseDirection
-      speed <- L.decimal
+      d <- parseDirection
+      s <- L.decimal
       _ <- TMC.newline
-      return $ Aoc.Command {Aoc.speed = speed, Aoc.direction = direction}
+      return $ Aoc.Command {Aoc.speed = s, Aoc.direction = d}
 
     parseDirection :: Day2InputParserT m Aoc.Direction
     parseDirection = do

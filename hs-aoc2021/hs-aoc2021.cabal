@@ -41,7 +41,12 @@ common common-options
 library
   import:              common-options
   hs-source-dirs:      src
-  exposed-modules:     HsAoc2021
+  exposed-modules:     HsAoc2021,
+                       HsAoc2021.Day1,
+                       HsAoc2021.Day2,
+                       HsAoc2021.Day3,
+                       HsAoc2021.Types
+  
   build-depends:       safe,
                        matrix,
                        vector
