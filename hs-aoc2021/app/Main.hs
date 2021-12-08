@@ -1,6 +1,3 @@
-{-# OPTIONS_GHC -Wno-type-defaults #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
-
 module Main (main) where
 
 import qualified Control.Monad as TM
@@ -37,27 +34,27 @@ main = do
   where
     runDay3 :: MonadIO m => Int -> (Aoc.DiagnosticReport -> Aoc.PowerConsumption) -> m ()
     runDay3 part runDay3Func = do
-      input <- readInputOfDay3 "../data/day3/part1/input.txt"
+      input <- readInputOfDay3 "../data/day3.txt"
       case input of
-        Left _ -> print $ "Failure to parse input of Day 3 / Part " <> show part
+        Left _ -> putTextLn $ "Failure to parse input of Day 3 / Part " <> show part
         Right report -> printResult 3 part $ runDay3Func report
 
     runDay2 :: MonadIO m => Int -> ([Aoc.Command] -> Int) -> m ()
     runDay2 part runDay2Func = do
-      input <- readInputOfDay2 "../data/day2/part1/input.txt"
+      input <- readInputOfDay2 "../data/day2.txt"
       case input of
-        Left _ -> print $ "Failure to parse input of Day 2 / Part " <> show part
+        Left _ -> putTextLn $ "Failure to parse input of Day 2 / Part " <> show part
         Right cmds -> printResult 2 part $ runDay2Func cmds
 
     runDay1 :: MonadIO m => Int -> ([Int] -> Int) -> m ()
     runDay1 part f = do
-      input <- readInputOfDay1 "../data/day1/part1/input.txt"
+      input <- readInputOfDay1 "../data/day1.txt"
       printResult 1 part $ f input
 
 -- Dumb function to print result
 printResult :: MonadIO m => Int -> Int -> Int -> m ()
 printResult day part result =
-  print $ "Day " <> show day <> " / Part " <> show part <> ": " <> show result
+  putTextLn . mconcat $ ["Day ",show day," / Part ",show part,": ",show result]
 
 -- Getting input for day 1
 readInputOfDay1 :: MonadIO m => Text -> m [Int]
