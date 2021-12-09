@@ -17,6 +17,7 @@ common common-options
   build-depends:       base >= 4.13.0.0
                      , relude
                      , text
+                     , megaparsec
   
   -- mixins:              base hiding (Prelude)
   --                    , relude (Relude as Prelude)
@@ -56,8 +57,7 @@ executable hs-aoc2021
   hs-source-dirs:      app
   main-is:             Main.hs
   
-  build-depends:       hs-aoc2021,
-                       megaparsec
+  build-depends:       hs-aoc2021
                       
   ghc-options:         -threaded
                        -rtsopts

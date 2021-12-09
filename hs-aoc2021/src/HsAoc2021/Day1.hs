@@ -1,19 +1,34 @@
-module HsAoc2021.Day1 (day1Part1,day1Part2) where
-import Safe.Exact (takeExactMay)
-import Relude
-    ( snd,
-      otherwise,
-      ($),
-      Num((+)),
-      Ord((>)),
-      Foldable(foldl'),
-      Maybe(Just, Nothing),
-      (.),
-      drop,
-      reverse,
-      sum )
+module HsAoc2021.Day1 (day1Part1, day1Part2, readInputOfDay1) where
 
-import HsAoc2021.Types (Depth,Speed)
+import Data.Text.Read (decimal)
+import HsAoc2021.Types (Depth, Speed)
+import Relude
+  ( Either (..),
+    Foldable (foldl'),
+    Int,
+    Maybe (Just, Nothing),
+    MonadIO,
+    Num ((+)),
+    Ord ((>)),
+    Text,
+    any,
+    drop,
+    fst,
+    isLeft,
+    otherwise,
+    readFileText,
+    return,
+    reverse,
+    rights,
+    snd,
+    sum,
+    toString,
+    words,
+    ($),
+    (.),
+    (<$>),
+  )
+import Safe.Exact (takeExactMay)
 
 day1Part1 :: [Depth] -> Speed
 day1Part1 [] = 0
@@ -34,3 +49,16 @@ day1Part2 depths =
         Nothing -> day1Part1 . reverse $ acc
         Just xs' -> execute (drop 1 xs) (sum xs' : acc)
 
+readInputOfDay1 ::
+  MonadIO m =>
+  Text ->
+  m (Either Text [Int])
+readInputOfDay1 path = do
+  content <- readFileText . toString $ path
+  ints content
+  where
+    input = (decimal <$>) . words
+    ints c = do
+      let content = input c
+       in return $
+            if any isLeft content then Left "An error occured !" else Right . (fst <$>) . rights $ content

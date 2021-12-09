@@ -1,31 +1,48 @@
-module HsAoc2021.Day3 (day3Part2,day3Part1) where
+module HsAoc2021.Day3 (day3Part2, day3Part1, readInputOfDay3) where
 
 import qualified Data.Matrix as M
+import qualified Data.Set as Set
 import qualified Data.Vector as V
 import HsAoc2021.Types
   ( DiagnosticReport (..),
     LifeSupportRating,
     PowerConsumption,
+    mkDiagnosticReport,
   )
 import Relude
   ( Bool (..),
+    Char,
+    Either,
     Eq ((==)),
     Foldable (foldl'),
     Functor (fmap),
     Int,
+    Maybe (..),
+    MonadIO,
     Num ((*), (+), (-)),
     Ord ((>=)),
+    Text,
+    Void,
+    fail,
     filter,
     not,
     otherwise,
+    readFile,
+    return,
     sum,
+    toString,
+    toText,
     zip,
     ($),
     (.),
     (<$>),
+    (<|>),
     (^),
+    (||),
   )
 import Relude.Unsafe ((!!))
+import qualified Text.Megaparsec as TM
+import qualified Text.Megaparsec.Char as TMC
 
 day3Part1 :: DiagnosticReport -> PowerConsumption
 day3Part1 (DR x) =
@@ -66,4 +83,23 @@ getMostSignificantBit bools =
 
 getLeastSignificantBit :: (Functor t, Foldable t) => t Bool -> Bool
 getLeastSignificantBit = not . getMostSignificantBit
+
+-- Getting input for day 3
+readInputOfDay3 :: MonadIO m => Text -> m (Either (TM.ParseErrorBundle Text Void) DiagnosticReport)
+readInputOfDay3 path = do
+  content <- readFile . toString $ path
+  TM.runParserT parseDiagnosticReport "input" . toText $ content
+
+type Day3InputParserT = TM.ParsecT Void Text
+
+parseDiagnosticReport :: Day3InputParserT m DiagnosticReport
+parseDiagnosticReport = do
+  rawLines <- parseLines <|> fail "We cannot parse Day 3 input !"
+  case mkDiagnosticReport . toBits $ rawLines of
+    Just report -> return report
+    Nothing -> TM.failure Nothing (Set.fromList [])
+  where
+    parseLine = TM.manyTill (TM.satisfy (\c -> c == '1' || c == '0') :: Day3InputParserT m Char) TMC.eol
+    parseLines = TM.manyTill parseLine TM.eof
+    toBits = (fmap . fmap) (== '1')
 

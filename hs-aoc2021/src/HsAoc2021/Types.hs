@@ -6,22 +6,28 @@ module HsAoc2021.Types
     Direction (..),
     Command (..),
     Position (..),
-    PowerConsumption,DiagnosticReport(..),LifeSupportRating,mkDiagnosticReport) where
+    PowerConsumption,
+    DiagnosticReport (..),
+    LifeSupportRating,
+    mkDiagnosticReport,
+  )
+where
 
 import qualified Data.Matrix as M
 import Relude
-    ( ($),
-      Eq((==)),
-      Show,
-      Foldable(length),
-      Bool,
-      Int,
-      Maybe(..),
-      (.),
-      all,
-      (<$>),
-      nonEmpty,
-      head )
+  ( Bool,
+    Eq ((==)),
+    Foldable (length),
+    Int,
+    Maybe (..),
+    Show,
+    all,
+    head,
+    nonEmpty,
+    ($),
+    (.),
+    (<$>),
+  )
 
 type Speed = Int
 
@@ -44,6 +50,7 @@ data Position = Position
   deriving stock (Show)
 
 newtype DiagnosticReport = DR (M.Matrix Bool)
+
 mkDiagnosticReport :: [[Bool]] -> Maybe DiagnosticReport
 mkDiagnosticReport xs =
   case nonEmpty xs of
@@ -52,7 +59,6 @@ mkDiagnosticReport xs =
       let rowsLength = length <$> xs'
           l = head rowsLength
        in if all (== l) rowsLength then Just . DR . M.fromLists $ xs else Nothing
-
 
 type PowerConsumption = Int
 
