@@ -49,16 +49,13 @@ day1Part2 depths =
         Nothing -> day1Part1 . reverse $ acc
         Just xs' -> execute (drop 1 xs) (sum xs' : acc)
 
-readInputOfDay1 ::
-  MonadIO m =>
-  Text ->
-  m (Either Text [Int])
+readInputOfDay1 :: MonadIO m => Text ->  m (Either Text [Int])
 readInputOfDay1 path = do
   content <- readFileText . toString $ path
-  ints content
+  read content
   where
-    input = (decimal <$>) . words
-    ints c = do
-      let content = input c
+    parse = (decimal <$>) . words
+    read c = do
+      let content = parse c
        in return $
             if any isLeft content then Left "An error occured !" else Right . (fst <$>) . rights $ content

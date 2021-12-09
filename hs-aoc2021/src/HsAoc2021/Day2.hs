@@ -8,6 +8,7 @@ import HsAoc2021.Types
   ( Command (..),
     Direction (..),
     Position (..),
+    AocParserT,
   )
 import Relude
   ( Char,
@@ -67,23 +68,22 @@ readInputOfDay2 path = do
   content <- readFile . toString $ path
   TM.runParserT parseCommands "input" . toText $ content
 
-type Day2InputParserT = TM.ParsecT Void Text
 
-parseCommands :: Day2InputParserT m [Command]
+parseCommands :: AocParserT m [Command]
 parseCommands = do
   TM.manyTill parseCommand TM.eof
   where
-    parseCommand :: Day2InputParserT m Command
+    parseCommand :: AocParserT m Command
     parseCommand = do
       d <- parseDirection
       s <- L.decimal
       _ <- TMC.newline
       return $ Command {speed = s, direction = d}
 
-    parseDirection :: Day2InputParserT m Direction
+    parseDirection :: AocParserT m Direction
     parseDirection = do
       rawDirection <-
-        TM.manyTill (TM.satisfy isLetter :: Day2InputParserT m Char) TMC.hspace1
+        TM.manyTill (TM.satisfy isLetter :: AocParserT m Char) TMC.hspace1
           <|> fail "Failure to parse day 2 input !"
       toDirection . toText $ rawDirection
       where

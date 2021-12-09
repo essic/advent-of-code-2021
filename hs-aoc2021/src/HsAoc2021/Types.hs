@@ -10,7 +10,7 @@ module HsAoc2021.Types
     DiagnosticReport (..),
     LifeSupportRating,
     mkDiagnosticReport,
-  )
+  AocParserT)
 where
 
 import qualified Data.Matrix as M
@@ -26,8 +26,9 @@ import Relude
     nonEmpty,
     ($),
     (.),
-    (<$>),
+    (<$>), Void, Text,
   )
+import qualified Text.Megaparsec as TM
 
 type Speed = Int
 
@@ -63,3 +64,5 @@ mkDiagnosticReport xs =
 type PowerConsumption = Int
 
 type LifeSupportRating = Int
+
+type AocParserT = TM.ParsecT Void Text

@@ -4,7 +4,8 @@ import qualified Data.Matrix as M
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 import HsAoc2021.Types
-  ( DiagnosticReport (..),
+  ( AocParserT,
+    DiagnosticReport (..),
     LifeSupportRating,
     PowerConsumption,
     mkDiagnosticReport,
@@ -90,16 +91,13 @@ readInputOfDay3 path = do
   content <- readFile . toString $ path
   TM.runParserT parseDiagnosticReport "input" . toText $ content
 
-type Day3InputParserT = TM.ParsecT Void Text
-
-parseDiagnosticReport :: Day3InputParserT m DiagnosticReport
+parseDiagnosticReport :: AocParserT m DiagnosticReport
 parseDiagnosticReport = do
   rawLines <- parseLines <|> fail "We cannot parse Day 3 input !"
   case mkDiagnosticReport . toBits $ rawLines of
     Just report -> return report
     Nothing -> TM.failure Nothing (Set.fromList [])
   where
-    parseLine = TM.manyTill (TM.satisfy (\c -> c == '1' || c == '0') :: Day3InputParserT m Char) TMC.eol
+    parseLine = TM.manyTill (TM.satisfy (\c -> c == '1' || c == '0') :: AocParserT m Char) TMC.eol
     parseLines = TM.manyTill parseLine TM.eof
     toBits = (fmap . fmap) (== '1')
-
