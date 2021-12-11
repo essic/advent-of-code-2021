@@ -18,6 +18,7 @@ common common-options
                      , relude
                      , text
                      , megaparsec
+                     , either
   
   -- mixins:              base hiding (Prelude)
   --                    , relude (Relude as Prelude)
@@ -46,6 +47,7 @@ library
                        HsAoc2021.Day1,
                        HsAoc2021.Day2,
                        HsAoc2021.Day3,
+                       HsAoc2021.Day4,
                        HsAoc2021.Types
   
   build-depends:       safe,
