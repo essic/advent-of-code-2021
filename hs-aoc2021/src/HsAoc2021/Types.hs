@@ -1,6 +1,4 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
-
 module HsAoc2021.Types
   ( Depth,
     Speed,
@@ -12,33 +10,16 @@ module HsAoc2021.Types
     LifeSupportRating,
     mkDiagnosticReport,
     AocParserT,
-    BingoRound (..),
-    BingoScore,
-    BingoBoard (..),
-    BingoCell (..),
-    BingoGame (..),
-    BingoPlayer (..),
-    BingoPlayerStatus (..)
+    traceShowId,
+    traceShowWith,
+    traceShowM,
+    traceShow
   )
 where
 
+import Relude.Debug 
 import qualified Data.Matrix as M
 import Relude
-  ( Bool,
-    Eq ((==)),
-    Foldable (length),
-    Int,
-    Maybe (..),
-    Show,
-    Text,
-    Void,
-    all,
-    head,
-    nonEmpty,
-    ($),
-    (.),
-    (<$>),
-  )
 import qualified Text.Megaparsec as TM
 
 type AocParserT = TM.ParsecT Void Text
@@ -77,32 +58,3 @@ mkDiagnosticReport xs =
 type PowerConsumption = Int
 
 type LifeSupportRating = Int
-
-type BingoScore = Int
-
-newtype BingoCell = BingoCell (Int, Bool)
-  deriving stock (Show,Eq)
-
-newtype BingoBoard = BingoBoard (M.Matrix BingoCell)
-  deriving stock (Show,Eq)
-
-data BingoPlayerStatus = Loosing | Won | MayWin
-  deriving stock (Show, Eq)
-
-data BingoPlayer = BingoPlayer
-  {
-    gameBoard :: BingoBoard,
-    score :: BingoScore,
-    status :: BingoPlayerStatus
-  }
-  deriving stock (Show)
-
-data BingoRound = NoRoundPlayed | Round Int
-  deriving stock (Show)
-
-data BingoGame = BingoGame
-  { round :: BingoRound,
-    numbersToMatch :: [Int],
-    players :: [BingoPlayer]
-  }
-  deriving stock (Show)

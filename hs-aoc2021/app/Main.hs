@@ -20,13 +20,13 @@ import Relude
     MonadIO,
     Monoid (mconcat),
     Semigroup ((<>)),
+    Show,
     Text,
     putTextLn,
     show,
     ($),
     (.),
   )
-import Relude.Debug (traceShowId)
 
 main :: (MonadIO m) => m ()
 main = do
@@ -41,15 +41,13 @@ main = do
 
   runDay4 1 day4Part1
   runDay4 2 day4Part2
-
   where
     runDay1 part = computeAnswerOfTheDay (1, part) readInputOfDay1
     runDay2 part = computeAnswerOfTheDay (2, part) readInputOfDay2
     runDay3 part = computeAnswerOfTheDay (3, part) readInputOfDay3
     runDay4 part = computeAnswerOfTheDay (4, part) readInputOfDay4
 
-
-computeAnswerOfTheDay :: MonadIO m => (Int, Int) -> (Text -> m (Either b a)) -> (a -> Int) -> m ()
+computeAnswerOfTheDay :: (MonadIO m, Show c) => (Int, Int) -> (Text -> m (Either b a)) -> (a -> c) -> m ()
 computeAnswerOfTheDay (day, part) readInput compute = do
   input <- readInput $ mconcat ["../data/", "day", show day, ".txt"]
   case input of
@@ -57,6 +55,6 @@ computeAnswerOfTheDay (day, part) readInput compute = do
     Right x -> printResult day part $ compute x
 
 -- Dumb function to print result
-printResult :: MonadIO m => Int -> Int -> Int -> m ()
+printResult :: (MonadIO m, Show a) => Int -> Int -> a -> m ()
 printResult day part result =
   putTextLn . mconcat $ ["Day ", show day, " / Part ", show part, ": ", show result]

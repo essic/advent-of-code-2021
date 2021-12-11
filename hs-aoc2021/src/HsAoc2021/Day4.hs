@@ -1,3 +1,6 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module HsAoc2021.Day4
   ( day4Part1,
     readInputOfDay4,
@@ -5,142 +8,134 @@ module HsAoc2021.Day4
   )
 where
 
-import Data.Either.Combinators (mapLeft)
+import qualified Data.Either.Combinators as EC
 import Data.Foldable (foldr')
 import qualified Data.Matrix as M
 import HsAoc2021.Types
-  ( AocParserT,
-    BingoBoard (..),
-    BingoCell (..),
-    BingoGame (..),
-    BingoPlayer (..),
-    BingoPlayerStatus (..),
-    BingoRound (..),
-    BingoScore,
-  )
 import Relude
-  ( Bool (..),
-    Either (Left, Right),
-    Eq ((/=), (==)),
-    Int,
-    Maybe (Just, Nothing),
-    Monad (return),
-    MonadIO,
-    Num ((*), (+)),
-    Text,
-    Void,
-    all,
-    any,
-    compare,
-    const,
-    filter,
-    flip,
-    fromRight,
-    length,
-    not,
-    or,
-    otherwise,
-    readFile,
-    snd,
-    toString,
-    toText,
-    ($),
-    (&&),
-    (-),
-    (.),
-    (<$>),
-    (>),
-    (||),
-  )
-import Relude.Debug (traceShowId, traceShowWith)
-import Relude.Unsafe ((!!))
 import Safe (maximumByMay)
+import Safe.Foldable (findJust)
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC
 import qualified Text.Megaparsec.Char.Lexer as L
 
-day4Part1 :: BingoGame -> BingoScore
+type BingoNumber = Int
+
+newtype Score = Score Int
+  deriving stock (Show, Eq, Ord)
+  deriving newtype (Num)
+
+data Cell = Cell {value :: BingoNumber, isSet :: Bool}
+  deriving stock (Show, Eq)
+
+newtype Board = Board (M.Matrix Cell)
+  deriving stock (Show, Eq)
+
+data TurnStatus = Loosing | MayWin | Won
+  deriving stock (Show, Eq, Ord)
+
+data PlayerStatus = PStatus
+  { tStatus :: TurnStatus,
+    score :: Score
+  }
+  deriving stock (Eq, Show)
+
+instance Ord PlayerStatus where
+  PStatus {tStatus = Won, score = x} `compare` PStatus {tStatus = Won, score = y} = x `compare` y
+  PStatus {tStatus = MayWin, score = x} `compare` PStatus {tStatus = MayWin, score = y} = x `compare` y
+  PStatus {tStatus = Loosing, score = x} `compare` PStatus {tStatus = Loosing, score = y} = x `compare` y
+  PStatus {tStatus = Won, score = _} `compare` PStatus {tStatus = _, score = _} = GT
+  PStatus {tStatus = _, score = _} `compare` PStatus {tStatus = Won, score = _} = LT
+  PStatus {tStatus = _, score = _} `compare` PStatus {tStatus = MayWin, score = _} = LT
+  PStatus {tStatus = _, score = _} `compare` PStatus {tStatus = Loosing, score = _} = LT
+
+data Player = Player
+  { gameBoard :: Board,
+    status :: PlayerStatus
+  }
+  deriving stock (Eq)
+
+newtype Turn = Turn Int
+  deriving stock (Eq, Ord)
+  deriving newtype (Num, Show)
+
+data BingoGame = BingoGame
+  { turn :: Turn,
+    bingoNumbers :: [BingoNumber],
+    players :: [Player]
+  }
+
+day4Part1 :: BingoGame -> Score
 day4Part1 g =
-  fromRight (-100) (playTurnTillFirstWin g)
+  fromRight (-100) (findFirstWinner g)
 
-day4Part2 :: BingoGame -> BingoScore
+day4Part2 :: BingoGame -> Score
 day4Part2 g =
-  fromRight (-100) (playTurnTillLastWin g)
+  fromRight (Score $ -100) (findLastWinner g)
 
-playTurnTillLastWin :: BingoGame -> Either Text Int
-playTurnTillLastWin game =
-  case findNextWinner game of
-    Left err -> Left err 
-    Right (game', w) ->
-      case playersLeft of
-        [] -> Right .  score $ w
-        _ ->  playTurnTillLastWin $ game' {players = playersLeft}
+findFirstWinner :: BingoGame -> Either Text Score
+findFirstWinner game =
+  EC.mapLeft (const "We did not find a winner !") $ score . status . snd <$> playUntilWinnerIsFound game
+
+findLastWinner :: BingoGame -> Either Text Score
+findLastWinner game = do
+  result <- playUntilWinnerIsFound game
+  case players . fst $ result of
+    [] -> return . score . status . snd $ result
+    _ -> findLastWinner . fst $ result
+
+playUntilWinnerIsFound :: BingoGame -> Either Text (BingoGame, Player)
+playUntilWinnerIsFound game = do
+  allPlayersAfterTheirMove <-
+    maybeToRight ("Could not play turn -> " <> show currentTurn) $
+      sequenceA $ (<$> maybeAt (i - 1) ns) . flip update <$> ps
+  case maximumByMay (\p1 p2 -> status p1 `compare` status p2) $
+    filter (\p -> tStatus (status p) == MayWin) allPlayersAfterTheirMove of
+    Nothing -> playUntilWinnerIsFound $ game {players = allPlayersAfterTheirMove, turn = currentTurn + 1}
+    Just winnerCandidate ->
+      let winnerScore = score . status $ winnerCandidate
+          pWithNewScores = declareWinner winnerScore <$> allPlayersAfterTheirMove
+          winner = findJust (\p -> tStatus (status p) == Won) pWithNewScores
+          loosers = filter (/= winner) pWithNewScores
+          nextGame = game {players = loosers}
+       in Right (nextGame, winner)
+  where
+    currentTurn@(Turn i) = turn game
+    ns = bingoNumbers game
+    ps = players game
+    declareWinner s p
+      | status p == PStatus {score = s, tStatus = MayWin} =
+        p {status = PStatus {score = s, tStatus = Won}}
+      | otherwise = p {status = PStatus {score = 0, tStatus = Loosing}}
+
+update :: BingoNumber -> Player -> Player
+update n player =
+  if canPlayerWin
+    then Player {gameBoard = newBoard, status = PStatus {score = computeScore n player', tStatus = MayWin}}
+    else Player {gameBoard = newBoard, status = PStatus {score = 0, tStatus = Loosing}}
+  where
+    (Board oldNewCells) = gameBoard player
+    newBoard@(Board newCells) =
+      Board $
+        (\cell -> if n == value cell then cell {isSet = True} else cell) <$> oldNewCells
+    player' = player {gameBoard = newBoard}
+    canPlayerWin =
+      isVictoryOnRows || isVictoryOnCols
       where
-        playersLeft = filter (\p -> gameBoard p /= gameBoard w) (players game')
+        isVictoryOnRows = checkGridLine M.getRow M.nrows
+        isVictoryOnCols = checkGridLine M.getCol M.ncols
+        checkGridLine f g =
+          or $ all isSet <$> filter (any (\c -> value c == n)) (flip f newCells <$> [1 .. (g newCells)])
 
-playTurnTillFirstWin :: BingoGame -> Either Text Int
-playTurnTillFirstWin game =
-  mapLeft (const "We did not find a winner !") $ score . snd <$> findNextWinner game
-
-findNextWinner :: BingoGame -> Either Text (BingoGame, BingoPlayer)
-findNextWinner game =
-  if turn > maxNumberOfTurn
-    then Left "We failed ! We cannot outdone the range of available bingo numbers !"
-    else case winnerMay of
-      Nothing -> findNextWinner $ game {players = turnPlayed, round = Round (turn + 1)}
-      Just winner ->
-        Right
-          ( game {players = setResults (score winner) <$> turnPlayed},
-            winner {status = Won}
-          )
-  where
-    turn = getRoundValue . round $ game
-    maxNumberOfTurn = length $ numbersToMatch game
-    bingoNumber = numbersToMatch game !! (turn - 1)
-    turnPlayed = playTurn bingoNumber <$> players game
-    winnerMay =
-      maximumByMay (\p1 p2 -> score p1 `compare` score p2) $
-        filter (\x -> status x == MayWin) turnPlayed
-    setResults score' player'
-      | score player' == score' && status player' == MayWin = player' {status = Won}
-      | status player' /= Won = player' {status = Loosing}
-      | otherwise = player'
-
-getRoundValue :: BingoRound -> Int
-getRoundValue x =
-  case x of
-    NoRoundPlayed -> 1
-    Round r -> r
-
-playTurn :: Int -> BingoPlayer -> BingoPlayer
-playTurn n player =
-  let player' = markBoard n player
-      board' = gameBoard player'
-   in if checkVictoryCondition n . gameBoard $ player'
-        then player' {score = calculateScore n board', status = MayWin}
-        else player' {score = calculateScore n board', status = Loosing}
-
-markBoard :: Int -> BingoPlayer -> BingoPlayer
-markBoard n player =
-  player {gameBoard = newBoard}
-  where
-    (BingoBoard cells) = gameBoard player
-    newBoard = BingoBoard $ (\(BingoCell o@(n', _)) -> BingoCell $ if n' == n then (n', True) else o) <$> cells
-
-checkVictoryCondition :: Int -> BingoBoard -> Bool
-checkVictoryCondition n (BingoBoard cells) =
-  rowsVictory || colsVictory
-  where
-    allRows = flip M.getRow cells <$> [1 .. (M.nrows cells)]
-    allCols = flip M.getCol cells <$> [1 .. (M.ncols cells)]
-    onlyRowsWithTheNumber = filter (any (\(BingoCell (c, _)) -> c == n)) allRows
-    onlyColsWithTheNumber = filter (any (\(BingoCell (c, _)) -> c == n)) allCols
-    rowsVictory = or $ all (\(BingoCell (_, s)) -> s) <$> onlyRowsWithTheNumber
-    colsVictory = or $ all (\(BingoCell (_, s)) -> s) <$> onlyColsWithTheNumber
-
-calculateScore :: Int -> BingoBoard -> Int
-calculateScore n (BingoBoard cells) =
-  n * foldr' (\(BingoCell (v, s)) c -> if not s then v + c else c) 0 cells
+computeScore :: BingoNumber -> Player -> Score
+computeScore n p =
+  let (Board cells) = gameBoard p
+   in Score $
+        n
+          * foldr'
+            (\cell currentScore -> if isSet cell then currentScore else value cell + currentScore)
+            0
+            cells
 
 readInputOfDay4 :: MonadIO m => Text -> m (Either (TM.ParseErrorBundle Text Void) BingoGame)
 readInputOfDay4 path = do
@@ -149,13 +144,13 @@ readInputOfDay4 path = do
 
 parseBingoGame :: AocParserT m BingoGame
 parseBingoGame = do
-  bingoNumbers <- TM.sepBy (L.decimal :: AocParserT m Int) ","
+  rawNumbers <- TM.sepBy (L.decimal :: AocParserT m Int) ","
   boards <- TM.manyTill pBoard TM.eof
   return $
     BingoGame
-      { numbersToMatch = bingoNumbers,
-        round = NoRoundPlayed,
-        players = (\b -> BingoPlayer {gameBoard = BingoBoard b, score = 0, status = Loosing}) <$> boards
+      { bingoNumbers = rawNumbers,
+        turn = 1,
+        players = (\b -> Player {gameBoard = Board b, status = PStatus {tStatus = Loosing, score = 0}}) <$> boards
       }
   where
     pInt = do
@@ -168,4 +163,4 @@ parseBingoGame = do
 
     pBoard = do
       board <- TM.count 5 pBoardLine
-      return $ (\i -> BingoCell (i, False)) <$> M.fromLists board
+      return $ flip Cell False <$> M.fromLists board
