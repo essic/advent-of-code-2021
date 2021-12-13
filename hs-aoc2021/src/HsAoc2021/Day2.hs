@@ -5,32 +5,29 @@ module HsAoc2021.Day2 (day2Part1, day2Part2, readInputOfDay2) where
 import Data.Char (isLetter)
 import qualified Data.Set as Set (fromList)
 import HsAoc2021.Types
-  ( Command (..),
-    Direction (..),
-    Position (..),
-    AocParserT,
+  (   AocParserT, AocParserError,
   )
-import Relude
-  ( Char,
-    Either,
-    Int,
-    Maybe (..),
-    MonadIO,
-    Num ((*), (+), (-)),
-    Text,
-    Void,
-    fail,
-    readFile,
-    return,
-    toString,
-    toText,
-    ($),
-    (.),
-    (<|>),
-  )
+import Relude hiding (Down)
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC
 import qualified Text.Megaparsec.Char.Lexer as L
+
+data Direction = Forward | Down | Up
+  deriving stock (Show)
+
+data Command = Command
+  { direction :: Direction,
+    speed :: Int
+  }
+  deriving stock (Show)
+
+data Position = Position
+  { horizontal :: Int,
+    depth :: Int,
+    aim :: Int
+  }
+  deriving stock (Show)
+
 
 defaultPosition :: Position
 defaultPosition =
@@ -63,11 +60,10 @@ day2Part2 cmds =
        in execute ys newPosition
 
 -- Getting input for day 2
-readInputOfDay2 :: MonadIO m => Text -> m (Either (TM.ParseErrorBundle Text Void) [Command])
+readInputOfDay2 :: MonadIO m => Text -> m (Either AocParserError [Command])
 readInputOfDay2 path = do
   content <- readFile . toString $ path
   TM.runParserT parseCommands "input" . toText $ content
-
 
 parseCommands :: AocParserT m [Command]
 parseCommands = do

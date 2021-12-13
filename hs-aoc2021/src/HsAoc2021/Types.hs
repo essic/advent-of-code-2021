@@ -1,60 +1,31 @@
 {-# LANGUAGE DerivingStrategies #-}
+
 module HsAoc2021.Types
-  ( Depth,
-    Speed,
-    Direction (..),
-    Command (..),
-    Position (..),
-    PowerConsumption,
-    DiagnosticReport (..),
-    LifeSupportRating,
-    mkDiagnosticReport,
-    AocParserT,
+  ( AocParserT,
     traceShowId,
     traceShowWith,
     traceShowM,
-    traceShow
-  )
+    traceShow,
+    AocParserError,
+  computeAnswerOfTheDay)
 where
 
-import Relude.Debug 
-import qualified Data.Matrix as M
 import Relude
 import qualified Text.Megaparsec as TM
 
 type AocParserT = TM.ParsecT Void Text
 
-type Speed = Int
+type AocParserError = TM.ParseErrorBundle Text Void
 
-type Depth = Int
+-- Dumb function to print result
+printResult :: (MonadIO m, Show a) => Int -> Int -> a -> m ()
+printResult day part result =
+  putTextLn . mconcat $ ["Day ", show day, " / Part ", show part, ": ", show result]
 
-data Direction = Forward | Down | Up
-  deriving stock (Show)
+computeAnswerOfTheDay :: (MonadIO m, Show c) => (Int, Int) -> (Text -> m (Either b a)) -> (a -> c) -> m ()
+computeAnswerOfTheDay (day, part) readInput compute = do
+  input <- readInput $ mconcat ["../data/", "day", show day, ".txt"]
+  case input of
+    Left _ -> putTextLn $ "Failure to parse input of day" <> show day
+    Right x -> printResult day part $ compute x
 
-data Command = Command
-  { direction :: Direction,
-    speed :: Speed
-  }
-  deriving stock (Show)
-
-data Position = Position
-  { horizontal :: Int,
-    depth :: Int,
-    aim :: Int
-  }
-  deriving stock (Show)
-
-newtype DiagnosticReport = DR (M.Matrix Bool)
-
-mkDiagnosticReport :: [[Bool]] -> Maybe DiagnosticReport
-mkDiagnosticReport xs =
-  case nonEmpty xs of
-    Nothing -> Nothing
-    Just xs' ->
-      let rowsLength = length <$> xs'
-          l = head rowsLength
-       in if all (== l) rowsLength then Just . DR . M.fromLists $ xs else Nothing
-
-type PowerConsumption = Int
-
-type LifeSupportRating = Int

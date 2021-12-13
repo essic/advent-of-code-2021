@@ -137,7 +137,7 @@ computeScore n p =
             0
             cells
 
-readInputOfDay4 :: MonadIO m => Text -> m (Either (TM.ParseErrorBundle Text Void) BingoGame)
+readInputOfDay4 :: MonadIO m => Text -> m (Either AocParserError BingoGame)
 readInputOfDay4 path = do
   content <- readFile . toString $ path
   TM.runParserT parseBingoGame "Day 4 / part 1" . toText $ content

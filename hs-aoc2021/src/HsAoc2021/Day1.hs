@@ -1,41 +1,35 @@
+{-# LANGUAGE DerivingStrategies #-}
 module HsAoc2021.Day1 (day1Part1, day1Part2, readInputOfDay1) where
 
 import Data.Text.Read (decimal)
-import HsAoc2021.Types (Depth, Speed)
-import Relude
-  ( Either (..),
-    Foldable (foldl'),
-    Int,
-    Maybe (Just, Nothing),
-    MonadIO,
-    Num ((+)),
-    Ord ((>)),
-    Text,
-    any,
-    drop,
-    fst,
-    isLeft,
-    otherwise,
-    readFileText,
-    return,
-    reverse,
-    rights,
-    snd,
-    sum,
-    toString,
-    words,
-    ($),
-    (.),
-    (<$>),
-  )
+import Relude hiding (Down)
 import Safe.Exact (takeExactMay)
+
+type Speed = Int
+
+type Depth = Int
+
+data Direction = Forward | Down | Up
+  deriving stock (Show)
+
+data Command = Command
+  { direction :: Direction,
+    speed :: Speed
+  }
+  deriving stock (Show)
+
+data Position = Position
+  { horizontal :: Int,
+    depth :: Int,
+    aim :: Int
+  }
+  deriving stock (Show)
 
 day1Part1 :: [Depth] -> Speed
 day1Part1 [] = 0
 day1Part1 depths@(x : _) =
   snd $ foldl' computeSpeed (x, 0) depths
   where
-    computeSpeed :: (Depth, Speed) -> Depth -> (Depth, Speed)
     computeSpeed (previousDepth, currentSpeed) currentDepth
       | currentDepth > previousDepth = (currentDepth, currentSpeed + 1)
       | otherwise = (currentDepth, currentSpeed)
