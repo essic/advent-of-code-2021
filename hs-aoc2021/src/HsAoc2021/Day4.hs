@@ -1,17 +1,15 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeApplications #-}
 
 module HsAoc2021.Day4
-  ( day4Part1,
-    readInputOfDay4,
-    day4Part2,
-  )
+  (runDay4)
 where
 
 import qualified Data.Either.Combinators as EC
 import Data.Foldable (foldr')
 import qualified Data.Matrix as M
-import HsAoc2021.Types
+import HsAoc2021.Types(AocParserT, mkPartOne, mkPartTwo, AocParserError, computeAnswerOfTheDay, printAnswerOfTheDay)
 import Relude
 import Safe (maximumByMay)
 import Safe.Foldable (findJust)
@@ -65,13 +63,11 @@ data BingoGame = BingoGame
     players :: [Player]
   }
 
-day4Part1 :: BingoGame -> Score
-day4Part1 g =
-  fromRight (-100) (findFirstWinner g)
+day4Part1 :: BingoGame -> Either Text Score
+day4Part1  = findFirstWinner
 
-day4Part2 :: BingoGame -> Score
-day4Part2 g =
-  fromRight (Score $ -100) (findLastWinner g)
+day4Part2 :: BingoGame -> Either Text Score
+day4Part2 = findLastWinner
 
 findFirstWinner :: BingoGame -> Either Text Score
 findFirstWinner game =
@@ -164,3 +160,11 @@ parseBingoGame = do
     pBoard = do
       board <- TM.count 5 pBoardLine
       return $ flip Cell False <$> M.fromLists board
+
+runDay4 :: MonadIO m => m ()
+runDay4 = do
+  p1 <- computeAnswerOfTheDay @Int (mkPartOne 4) readInputOfDay4 day4Part1
+  printAnswerOfTheDay p1
+
+  p2 <- computeAnswerOfTheDay @Int (mkPartTwo 4) readInputOfDay4 day4Part2
+  printAnswerOfTheDay p2

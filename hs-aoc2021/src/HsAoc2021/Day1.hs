@@ -1,8 +1,42 @@
 {-# LANGUAGE DerivingStrategies #-}
-module HsAoc2021.Day1 (day1Part1, day1Part2, readInputOfDay1) where
+{-# LANGUAGE TypeApplications #-}
+
+module HsAoc2021.Day1 (runDay1) where
 
 import Data.Text.Read (decimal)
-import Relude hiding (Down)
+import HsAoc2021.Types
+  ( computeAnswerOfTheDay,
+    mkPartOne,
+    mkPartTwo,
+    printAnswerOfTheDay,
+    runWrapper,
+  )
+import Relude
+    ( fst,
+      snd,
+      otherwise,
+      ($),
+      Monad(return),
+      Num((+)),
+      Ord((>)),
+      Show,
+      Foldable(foldl'),
+      Int,
+      Maybe(Just, Nothing),
+      Either(..),
+      (.),
+      Text,
+      MonadIO,
+      isLeft,
+      rights,
+      any,
+      (<$>),
+      drop,
+      reverse,
+      readFileText,
+      sum,
+      words,
+      ToString(toString) )
 import Safe.Exact (takeExactMay)
 
 type Speed = Int
@@ -43,7 +77,7 @@ day1Part2 depths =
         Nothing -> day1Part1 . reverse $ acc
         Just xs' -> execute (drop 1 xs) (sum xs' : acc)
 
-readInputOfDay1 :: MonadIO m => Text ->  m (Either Text [Int])
+readInputOfDay1 :: (MonadIO m) => Text -> m (Either Text [Int])
 readInputOfDay1 path = do
   content <- readFileText . toString $ path
   read content
@@ -53,3 +87,11 @@ readInputOfDay1 path = do
       let content = parse c
        in return $
             if any isLeft content then Left "An error occured !" else Right . (fst <$>) . rights $ content
+
+runDay1 :: MonadIO m => m ()
+runDay1 = do
+  p1 <- computeAnswerOfTheDay @Int (mkPartOne 1) readInputOfDay1 $ runWrapper day1Part1
+  printAnswerOfTheDay p1
+
+  p2 <- computeAnswerOfTheDay @Int (mkPartTwo 1) readInputOfDay1 $ runWrapper day1Part2
+  printAnswerOfTheDay p2

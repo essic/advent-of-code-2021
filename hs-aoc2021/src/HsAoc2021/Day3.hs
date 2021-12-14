@@ -1,8 +1,6 @@
+{-# LANGUAGE TypeApplications #-}
 module HsAoc2021.Day3
-  ( day3Part2,
-    day3Part1,
-    readInputOfDay3,
-  )
+  (runDay3)
 where
 
 import qualified Data.Matrix as M
@@ -10,8 +8,45 @@ import qualified Data.Set as Set
 import qualified Data.Vector as V
 import HsAoc2021.Types
   ( AocParserT,
+    computeAnswerOfTheDay,
+    printAnswerOfTheDay,
+    runWrapper,
+    mkPartOne,
+    mkPartTwo
   )
 import Relude
+    ( filter,
+      zip,
+      otherwise,
+      ($),
+      Eq((==)),
+      Monad(return),
+      Functor(fmap),
+      Num((-), (+), (*)),
+      Ord((>=)),
+      MonadFail(fail),
+      Foldable(length, foldl'),
+      Bool(..),
+      Char,
+      Int,
+      Maybe(..),
+      Either,
+      (.),
+      Void,
+      Text,
+      MonadIO,
+      all,
+      Alternative((<|>)),
+      (<$>),
+      not,
+      (||),
+      nonEmpty,
+      (^),
+      sum,
+      readFile,
+      head,
+      ToString(toString),
+      ToText(toText) )
 import Relude.Unsafe ((!!))
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC
@@ -50,22 +85,21 @@ day3Part2 (DR x) =
     co2ScrubberRating = sumBits . bitWeightForEachColumn $ execute getLeastSignificantBit x 1
     filterOnMatrixRow f = M.fromLists . filter f . M.toLists
     execute f mx y
-      | M.nrows mx == 1 =  V.toList $ M.getRow 1 mx
+      | M.nrows mx == 1 = V.toList $ M.getRow 1 mx
       | otherwise =
         let sbToFind = f $ M.getCol y mx
             mx' = filterOnMatrixRow (\row -> (row !! (y - 1)) == sbToFind) mx
          in execute f mx' (y + 1)
 
-
-sumBits :: [(Int,Bool)] -> Int
+sumBits :: [(Int, Bool)] -> Int
 sumBits = sum . fmap (\(weight, value) -> if value then weight else 0)
 
-bitWeightForEachColumn ::  [a] -> [(Int,a)]
+bitWeightForEachColumn :: [a] -> [(Int, a)]
 bitWeightForEachColumn xs =
   zip ys xs
   where
     nCols = length xs
-    ys = (\c -> (2 :: Int) ^ (nCols - c)) <$> [1..nCols]
+    ys = (\c -> (2 :: Int) ^ (nCols - c)) <$> [1 .. nCols]
 
 getMostSignificantBit :: (Functor t, Foldable t) => t Bool -> Bool
 getMostSignificantBit bools =
@@ -95,3 +129,11 @@ parseDiagnosticReport = do
     parseLine = TM.manyTill (TM.satisfy (\c -> c == '1' || c == '0') :: AocParserT m Char) TMC.eol
     parseLines = TM.manyTill parseLine TM.eof
     toBits = (fmap . fmap) (== '1')
+
+runDay3 :: MonadIO m => m ()
+runDay3 = do
+  p1 <- computeAnswerOfTheDay @Int (mkPartOne 3) readInputOfDay3 (runWrapper day3Part1)
+  printAnswerOfTheDay p1
+
+  p2 <- computeAnswerOfTheDay @Int (mkPartTwo 3) readInputOfDay3 (runWrapper day3Part2)
+  printAnswerOfTheDay p2

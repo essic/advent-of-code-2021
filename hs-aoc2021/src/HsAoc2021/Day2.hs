@@ -1,11 +1,18 @@
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE TypeApplications #-}
 
-module HsAoc2021.Day2 (day2Part1, day2Part2, readInputOfDay2) where
+module HsAoc2021.Day2 (runDay2) where
 
 import Data.Char (isLetter)
 import qualified Data.Set as Set (fromList)
 import HsAoc2021.Types
-  (   AocParserT, AocParserError,
+  ( AocParserError,
+    AocParserT,
+    computeAnswerOfTheDay,
+    mkPartOne,
+    mkPartTwo,
+    printAnswerOfTheDay,
+    runWrapper,
   )
 import Relude hiding (Down)
 import qualified Text.Megaparsec as TM
@@ -27,7 +34,6 @@ data Position = Position
     aim :: Int
   }
   deriving stock (Show)
-
 
 defaultPosition :: Position
 defaultPosition =
@@ -89,3 +95,11 @@ parseCommands = do
             "down" -> return Down
             "up" -> return Up
             _ -> TM.failure Nothing (Set.fromList [])
+
+runDay2 :: MonadIO m => m ()
+runDay2 = do
+  p1 <- computeAnswerOfTheDay @Int (mkPartOne 2) readInputOfDay2 (runWrapper day2Part1)
+  printAnswerOfTheDay p1
+
+  p2 <- computeAnswerOfTheDay @Int (mkPartTwo 2) readInputOfDay2 (runWrapper day2Part2)
+  printAnswerOfTheDay p2
