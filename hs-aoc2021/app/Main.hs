@@ -5,6 +5,7 @@ import HsAoc2021
     runDay2,
     runDay3,
     runDay4,
+    runDay5,
   )
 import Relude (MonadIO)
 
@@ -14,3 +15,4 @@ main = do
   runDay2
   runDay3
   runDay4
+  runDay5

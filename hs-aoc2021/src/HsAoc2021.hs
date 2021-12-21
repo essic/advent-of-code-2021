@@ -12,12 +12,13 @@ module HsAoc2021
   ( module Day1,
     module Day2,
     module Day3,
-    module Day4
+    module Day4,
+    module Day5
   )
 where
 
 import HsAoc2021.Day1 as Day1
 import HsAoc2021.Day2 as Day2
 import HsAoc2021.Day3 as Day3
-
 import HsAoc2021.Day4 as Day4
+import HsAoc2021.Day5 as Day5

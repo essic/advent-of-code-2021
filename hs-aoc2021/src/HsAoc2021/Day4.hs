@@ -20,8 +20,8 @@ import qualified Text.Megaparsec.Char.Lexer as L
 type BingoNumber = Int
 
 newtype Score = Score Int
-  deriving stock (Show, Eq, Ord)
-  deriving newtype (Num)
+  deriving stock (Eq, Ord)
+  deriving newtype (Num, Show)
 
 data Cell = Cell {value :: BingoNumber, isSet :: Bool}
   deriving stock (Show, Eq)

@@ -28,7 +28,7 @@ instance (ToText a) => ToText (AocError a) where
     "An error occured during input parsing : " <> msg
 
   toText (AocComputeError err) =
-     "An error occured during computation " <> toText err
+     "An error occured during computation : " <> toText err
 
 data (ToText a, Num b) => AocContext a b = AocCtx
   { day :: Int,
