@@ -2,14 +2,19 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeApplications #-}
 
-module HsAoc2021.Day4
-  (runDay4)
-where
+module HsAoc2021.Day4 (runDay4) where
 
 import qualified Data.Either.Combinators as EC
 import Data.Foldable (foldr')
 import qualified Data.Matrix as M
-import HsAoc2021.Types(AocParserT, mkPartOne, mkPartTwo, AocParserError, computeAnswerOfTheDay, printAnswerOfTheDay)
+import HsAoc2021.Types
+  ( AocParserError,
+    AocParserT,
+    computeAnswerOfTheDay,
+    mkPartOne,
+    mkPartTwo,
+    printAnswerOfTheDay,
+  )
 import Relude
 import Safe (maximumByMay)
 import Safe.Foldable (findJust)
@@ -64,7 +69,7 @@ data BingoGame = BingoGame
   }
 
 day4Part1 :: BingoGame -> Either Text Score
-day4Part1  = findFirstWinner
+day4Part1 = findFirstWinner
 
 day4Part2 :: BingoGame -> Either Text Score
 day4Part2 = findLastWinner

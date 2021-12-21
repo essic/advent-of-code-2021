@@ -15,38 +15,6 @@ import HsAoc2021.Types
     mkPartTwo
   )
 import Relude
-    ( filter,
-      zip,
-      otherwise,
-      ($),
-      Eq((==)),
-      Monad(return),
-      Functor(fmap),
-      Num((-), (+), (*)),
-      Ord((>=)),
-      MonadFail(fail),
-      Foldable(length, foldl'),
-      Bool(..),
-      Char,
-      Int,
-      Maybe(..),
-      Either,
-      (.),
-      Void,
-      Text,
-      MonadIO,
-      all,
-      Alternative((<|>)),
-      (<$>),
-      not,
-      (||),
-      nonEmpty,
-      (^),
-      sum,
-      readFile,
-      head,
-      ToString(toString),
-      ToText(toText) )
 import Relude.Unsafe ((!!))
 import qualified Text.Megaparsec as TM
 import qualified Text.Megaparsec.Char as TMC

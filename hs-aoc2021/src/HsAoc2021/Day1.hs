@@ -12,31 +12,6 @@ import HsAoc2021.Types
     runWrapper,
   )
 import Relude
-    ( fst,
-      snd,
-      otherwise,
-      ($),
-      Monad(return),
-      Num((+)),
-      Ord((>)),
-      Show,
-      Foldable(foldl'),
-      Int,
-      Maybe(Just, Nothing),
-      Either(..),
-      (.),
-      Text,
-      MonadIO,
-      isLeft,
-      rights,
-      any,
-      (<$>),
-      drop,
-      reverse,
-      readFileText,
-      sum,
-      words,
-      ToString(toString) )
 import Safe.Exact (takeExactMay)
 
 type Speed = Int
